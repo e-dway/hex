@@ -38,7 +38,7 @@ interface Stop {
       </div>
 
       <div class="stops__add">
-        <input type="search" placeholder="Add a place in the map view…" [(ngModel)]="q" />
+        <input type="search" placeholder="Add a place from this workspace…" [(ngModel)]="q" />
         <input type="number" class="stops__idin" placeholder="or id" [(ngModel)]="idInput" (keydown.enter)="addById(); $event.preventDefault()" />
         <button type="button" class="btn btn--sm" (click)="addById()">Add id</button>
       </div>
@@ -48,7 +48,7 @@ interface Stop {
           <span class="stops__name">{{ m.name }}</span><span class="stops__id">#{{ m.id }}</span>
         </button>
       </div>
-      <div class="field-hint">Order is the route order. Drag to reorder. The picker lists places currently loaded on the map — pan/zoom to load more, or add by id.</div>
+      <div class="field-hint">Order is the route order. Drag to reorder. The picker lists every place in this workspace; use add-by-id for a place from another workspace.</div>
     </div>
   `,
 })

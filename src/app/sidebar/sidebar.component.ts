@@ -52,8 +52,8 @@ const TABS: { id: Tab; label: string }[] = [
             <ng-template #emptyPois>
               <div class="empty">
                 <div class="empty__art" [innerHTML]="ART.pin"></div>
-                <div class="empty__title">{{ st.loading() ? 'Loading places…' : 'No places in view' }}</div>
-                <div class="empty__hint" *ngIf="!st.loading()">Pan or zoom the map to find your places — or press <kbd>New</kbd> and click the map to drop one.</div>
+                <div class="empty__title">{{ st.loading() ? 'Loading places…' : 'No places yet' }}</div>
+                <div class="empty__hint" *ngIf="!st.loading()">Press <kbd>New</kbd> and click the map to add the first place in this workspace.</div>
               </div>
             </ng-template>
           </ng-container>
@@ -73,8 +73,8 @@ const TABS: { id: Tab; label: string }[] = [
             <ng-template #emptyItin>
               <div class="empty">
                 <div class="empty__art" [innerHTML]="ART.route"></div>
-                <div class="empty__title">{{ st.loading() ? 'Loading routes…' : 'No routes in view' }}</div>
-                <div class="empty__hint" *ngIf="!st.loading()">Routes for this workspace appear here. Pan the map, or create one with <kbd>New</kbd>.</div>
+                <div class="empty__title">{{ st.loading() ? 'Loading routes…' : 'No routes yet' }}</div>
+                <div class="empty__hint" *ngIf="!st.loading()">Press <kbd>New</kbd> to create the first route in this workspace.</div>
               </div>
             </ng-template>
           </ng-container>

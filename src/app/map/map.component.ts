@@ -60,7 +60,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private theme: 'light' | 'dark' = 'light';
   private last: { pois: FeatureCollection; itineraries: FeatureCollection } = { pois: EMPTY_FC, itineraries: EMPTY_FC };
   private selected: { kind: 'poi' | 'itinerary'; id: number } | null = null;
-  private reloadTimer: any;
   private reloadSeq = 0;
 
   constructor(private api: ApiService, public st: StateService, private themeSvc: ThemeService) {
@@ -113,7 +112,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.wire();
       this.reload('load');
     });
-    this.map.on('moveend', () => this.scheduleReload());
+    // No moveend reload: we load the workspace's complete dataset once per
+    // owner/refresh, and let MapLibre clip rendering to the viewport.
     this.map.on('error', (e: any) => console.error('Map error:', e.error?.message ?? e.error ?? e));
   }
 
@@ -261,24 +261,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private scheduleReload() {
-    clearTimeout(this.reloadTimer);
-    this.reloadTimer = setTimeout(() => this.reload('moveend'), 300);
-  }
-
-  private bbox(): [number, number, number, number] {
-    const b = this.map!.getBounds();
-    return [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
-  }
+  // World bbox — the API requires `bbox`, but we want the workspace's complete
+  // dataset, not a viewport slice.
+  private static readonly WORLD_BBOX = '-180,-85,180,85';
 
   private async reload(why: string) {
     const m = this.map;
     if (!m || !m.isStyleLoaded()) return;
     const seq = ++this.reloadSeq;
     const owner = this.st.owner();
-    const bb = this.bbox();
-    if (bb.some((n) => !Number.isFinite(n))) return; // container has no size yet
-    const bbox = bb.join(',');
+    const bbox = MapComponent.WORLD_BBOX;
     this.st.loading.set(true);
     try {
       const [pois, itins] = await Promise.allSettled([this.api.poisGeojson(bbox, owner), this.api.itinerariesGeojson(bbox, owner)]);
