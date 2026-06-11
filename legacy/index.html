@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HEX — Experiences Manager</title>
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://experiences.hoponmobility.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" width="26" height="26">
+            <path class="brand__route" d="M4 22 C 9 22, 9 8, 14 8 S 19 22, 24 6" fill="none" />
+            <circle class="brand__pin brand__pin--a" cx="4" cy="22" r="3" />
+            <circle class="brand__pin brand__pin--b" cx="24" cy="6" r="3" />
+          </svg>
+        </span>
+        <div class="brand__type">
+          <span class="brand__name">HEX</span>
+          <span class="brand__tag">Experiences Manager</span>
+        </div>
+      </div>
+
+      <div class="owner">
+        <label for="owner">Workspace</label>
+        <div class="owner__field">
+          <input id="owner" list="owners" autocomplete="off" spellcheck="false" aria-label="Owner workspace id" />
+          <datalist id="owners"></datalist>
+        </div>
+        <button id="reload" class="iconbtn" title="Reload data in view" aria-label="Reload">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 11A8 8 0 1 0 18 16M20 5v6h-6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="topbar__right">
+        <div class="status" id="status" title="Data status">
+          <span id="status-dot" class="status__dot"></span>
+          <span id="status-text" class="status__text">starting</span>
+        </div>
+        <button id="theme" class="iconbtn iconbtn--label" title="Toggle theme" aria-label="Toggle color theme">
+          <span id="theme-icon" aria-hidden="true">◐</span><span id="theme-label">Auto</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <nav class="tabs" id="tabs" role="tablist">
+          <button class="tab is-active" data-tab="pois" role="tab">Places</button>
+          <button class="tab" data-tab="itineraries" role="tab">Routes</button>
+          <button class="tab" data-tab="tags" role="tab">Tags</button>
+          <button class="tab" data-tab="experiences" role="tab">Experiences</button>
+          <span class="tabs__ink" id="tabs-ink" aria-hidden="true"></span>
+        </nav>
+
+        <div class="toolbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="filter" type="search" placeholder="Filter…" aria-label="Filter list" />
+          </div>
+          <button id="create-btn" class="btn btn--primary">
+            <span aria-hidden="true">＋</span> New
+          </button>
+        </div>
+
+        <div id="list" class="list" role="list" aria-live="polite"></div>
+
+        <section id="detail" class="detail" hidden aria-label="Editor"></section>
+      </aside>
+
+      <section class="map-wrap">
+        <div id="map"></div>
+        <div id="map-hint" class="map-hint" hidden></div>
+        <div class="legend" aria-hidden="true">
+          <span class="legend__item"><i class="dot dot--poi"></i>Place</span>
+          <span class="legend__item"><i class="dot dot--hi"></i>Featured</span>
+          <span class="legend__item"><i class="dash"></i>Route</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
