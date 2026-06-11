@@ -1,0 +1,22 @@
+# Netlify build + deploy config for HEX.
+# Connect this repo in the Netlify dashboard; the rest is handled here.
+
+[build]
+  command = "npm run build"
+  publish = "dist/hex/browser"
+
+[build.environment]
+  # Angular 21 needs Node ^20.19 || ^22.12 || >=24. Netlify's build image has
+  # a modern glibc, so the standard binary works (no glibc-217 workaround needed).
+  NODE_VERSION = "22"
+  # Disable Angular's persistent build cache (lmdb); Netlify caches the workspace
+  # itself between builds, so this just avoids a needless native dep.
+  NG_CLI_ANALYTICS = "false"
+
+# Single-page app fallback: serve index.html for any path that isn't a real
+# file. Real files (marker-icons.json, hashed JS/CSS, favicon) are matched
+# before redirects, so this only kicks in for direct hits to "deep" URLs.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

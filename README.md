@@ -45,11 +45,19 @@ npm install
 npx ng serve --host 0.0.0.0 --port 9800 --allowed-hosts
 ```
 
-Production build → static files in `dist/hex/`:
+Production build → static files in `dist/hex/browser/`:
 
 ```bash
 npm run build
 ```
+
+## Deploy on Netlify
+
+The repo ships a `netlify.toml` — just **connect the repo in the Netlify
+dashboard** and that's it. Build command, publish dir (`dist/hex/browser`),
+Node 22 and an SPA fallback redirect (so `index.html` is served for any deep
+URL hit) are all configured. No env vars or secrets needed — the app calls
+`experiences.hoponmobility.com` directly and the API has open CORS.
 
 (One harmless build warning here: the lmdb build-cache native module wants
 glibc 2.33, so the persistent compile cache is disabled — builds still produce
