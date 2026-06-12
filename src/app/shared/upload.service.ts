@@ -1,60 +1,59 @@
 import { Injectable } from '@angular/core';
 
 /**
- * Configurable image-upload client. The Experiences API has no upload endpoint,
- * so galleries reference externally-hosted URLs. Point this at your upload
- * service and gallery file-drops will POST there and use the returned URL.
+ * Image upload — uses the e-dway signer flow (mirrors the management-front
+ * `FileUploadService`):
  *
- * ▶ TODO: fill in `UPLOAD` with your endpoint. Until `url` is set, file uploads
- *   are disabled (drag-and-drop of image URLs still works).
+ *   1. `GET  {api}/utils/imgupload/{owner}/{filename}` → `{ url, gurl }`
+ *      - `url`  is a presigned S3 PUT URL (single use)
+ *      - `gurl` is a presigned GET URL; the bare object URL is `gurl.split('?')[0]`
+ *   2. `PUT  {url}` with the file bytes — only `host` is signed, so any
+ *      Content-Type works.
+ *
+ * The bare public URL is what gets stored in the gallery / POI icon field.
  */
-const UPLOAD = {
-  url: '', // e.g. 'https://files.hoponmobility.com/upload'
-  method: 'POST',
-  fileField: 'file', // multipart form field name for the binary
-  headers: {} as Record<string, string>, // e.g. { Authorization: 'Bearer …' }
-  fields: {} as Record<string, string>, // extra static form fields
-  // Where the resulting URL is in the response: a dot-path into JSON
-  // (e.g. 'url', 'data.url', 'location'), or '$text' for a plain-text body.
-  responseUrlPath: 'url',
-};
+
+const UPLOAD_API = 'https://api.hoponmobility.com/2.0';
+
+interface SignerResponse {
+  url: string;
+  gurl: string;
+  type?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UploadService {
-  get configured() {
-    return !!UPLOAD.url;
-  }
-
-  /** Upload one image file and resolve to its hosted URL. */
   async upload(file: File, ctx: { owner?: string } = {}): Promise<string> {
-    if (!this.configured) {
-      throw new Error('Image upload endpoint is not configured (see upload.service.ts).');
-    }
-    const form = new FormData();
-    form.append(UPLOAD.fileField, file, file.name);
-    for (const [k, v] of Object.entries(UPLOAD.fields)) form.append(k, v);
-    if (ctx.owner) form.append('owner', ctx.owner);
+    const owner = (ctx.owner || '').trim();
+    if (!owner) throw new Error('Upload needs a workspace — pick one in the top bar first.');
 
-    let res: Response;
+    const signerUrl = `${UPLOAD_API}/utils/imgupload/${encodeURIComponent(owner)}/${encodeURIComponent(file.name)}`;
+
+    let cfg: SignerResponse;
     try {
-      res = await fetch(UPLOAD.url, { method: UPLOAD.method, headers: UPLOAD.headers, body: form });
+      const res = await fetch(signerUrl);
+      if (!res.ok) throw new Error(`Signer ${res.status} ${res.statusText}`);
+      cfg = await res.json();
+    } catch (e: any) {
+      throw new Error(`Could not get an upload URL: ${e.message}`);
+    }
+    if (!cfg?.url || !cfg?.gurl) throw new Error('Signer returned an unexpected response.');
+
+    try {
+      const res = await fetch(cfg.url, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`Upload ${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 140)}` : ''}`);
+      }
     } catch (e: any) {
       throw new Error(`Upload failed: ${e.message}`);
     }
-    const text = await res.text();
-    if (!res.ok) throw new Error(`Upload ${res.status} ${res.statusText} — ${text.slice(0, 160)}`);
 
-    if (UPLOAD.responseUrlPath === '$text') return text.trim();
-    let body: any;
-    try {
-      body = JSON.parse(text);
-    } catch {
-      return text.trim(); // tolerate plain-text URL responses
-    }
-    const url = UPLOAD.responseUrlPath.split('.').reduce((o, k) => (o == null ? o : o[k]), body);
-    if (!url || typeof url !== 'string') {
-      throw new Error(`Upload succeeded but no URL at "${UPLOAD.responseUrlPath}" in the response.`);
-    }
-    return url;
+    // The presigned GET URL with its query stripped is the public object URL.
+    return cfg.gurl.split('?')[0];
   }
 }

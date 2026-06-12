@@ -126,10 +126,6 @@ export class IconPickerComponent implements OnInit {
     if (!dt) return;
     const file = [...(dt.files || [])].find((f) => f.type.startsWith('image/'));
     if (file) {
-      if (!this.upload.configured) {
-        this.toast.show('File upload endpoint is not configured (upload.service.ts).', 'error');
-        return;
-      }
       try {
         this.setUrl(await this.upload.upload(file, { owner: this.st.owner() }));
       } catch (err: any) {

@@ -48,10 +48,9 @@ interface Img {
       <div class="gallery__add">
         <input type="url" placeholder="Paste an image URL…" [(ngModel)]="urlInput" (keydown.enter)="addUrl(); $event.preventDefault()" />
         <button type="button" class="btn btn--sm" (click)="addUrl()">Add URL</button>
-        <button type="button" class="btn btn--sm" (click)="file.click()" [disabled]="!upload.configured" [title]="upload.configured ? '' : 'Upload endpoint not configured'">Browse…</button>
+        <button type="button" class="btn btn--sm" (click)="file.click()">Browse…</button>
         <input #file type="file" accept="image/*" multiple hidden (change)="onPick($event)" />
       </div>
-      <div class="field-hint" *ngIf="!upload.configured">Drag image URLs to add them. File upload is off until the endpoint is set in <code>upload.service.ts</code>.</div>
     </div>
   `,
 })
@@ -155,10 +154,6 @@ export class GalleryComponent {
   }
 
   private async uploadFiles(files: File[]) {
-    if (!this.upload.configured) {
-      this.toast.show('File upload endpoint is not configured (upload.service.ts).', 'error');
-      return;
-    }
     const owner = this.st.owner();
     for (const f of files) {
       this.uploading++;
