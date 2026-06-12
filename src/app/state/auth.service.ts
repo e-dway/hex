@@ -12,7 +12,9 @@ import { Injectable, computed, signal } from '@angular/core';
  * signals and localStorage (so refresh restores the session).
  */
 
-const API = 'https://api.hoponmobility.com/2.0';
+// Same-origin proxy — Netlify rewrites `/_api/*` to api.hoponmobility.com/2.0,
+// and `ng serve`'s proxy.conf.json does the same in dev. See netlify.toml.
+const API = '/_api';
 
 const K = {
   login: 'E-DWay:login',

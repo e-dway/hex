@@ -1,0 +1,8 @@
+{
+  "/_api": {
+    "target": "https://api.hoponmobility.com/2.0",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/_api": "" }
+  }
+}

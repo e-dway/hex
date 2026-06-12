@@ -13,6 +13,16 @@
   # itself between builds, so this just avoids a needless native dep.
   NG_CLI_ANALYTICS = "false"
 
+# Same-origin proxy to api.hoponmobility.com/2.0 — that host doesn't include
+# this site in its CORS allowlist, so the auth/login + upload-signer calls
+# would otherwise be blocked. Netlify rewrites these server-side, and the
+# browser sees a same-origin call. Must come BEFORE the SPA fallback.
+[[redirects]]
+  from = "/_api/*"
+  to = "https://api.hoponmobility.com/2.0/:splat"
+  status = 200
+  force = true
+
 # Single-page app fallback: serve index.html for any path that isn't a real
 # file. Real files (marker-icons.json, hashed JS/CSS, favicon) are matched
 # before redirects, so this only kicks in for direct hits to "deep" URLs.

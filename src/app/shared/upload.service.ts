@@ -13,7 +13,11 @@ import { Injectable } from '@angular/core';
  * The bare public URL is what gets stored in the gallery / POI icon field.
  */
 
-const UPLOAD_API = 'https://api.hoponmobility.com/2.0';
+// Same-origin proxy — Netlify rewrites `/_api/*` to api.hoponmobility.com/2.0,
+// and `ng serve`'s proxy.conf.json does the same in dev. See netlify.toml.
+// (The PUT goes to the absolute presigned `cfg.url` on files.hoponmobility.com,
+//  whose bucket CORS already allows this site.)
+const UPLOAD_API = '/_api';
 
 interface SignerResponse {
   url: string;
