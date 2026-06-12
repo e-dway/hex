@@ -48,8 +48,9 @@ export class ApiService {
   }
 
   // ---- POIs ----------------------------------------------------------------
-  poisGeojson(bbox: string, owner: string) {
-    return this.geojson('/api/pois/pois.geojson', { bbox, owner });
+  // Admin-grade reads: no relevance gate, no visibility filter, complete catalogue.
+  poisGeojson(owner: string) {
+    return this.geojson('/api/admin/pois/pois.geojson', { owner });
   }
   async getPoi(id: number): Promise<POIDetail> {
     return this.unwrap(await this.client.GET('/api/pois/{poi_id}', { params: { path: { poi_id: id } } }));
@@ -65,8 +66,10 @@ export class ApiService {
   }
 
   // ---- Itineraries ---------------------------------------------------------
-  itinerariesGeojson(bbox: string, owner: string) {
-    return this.geojson('/api/itineraries/itineraries.geojson', { bbox, owner });
+  // Admin endpoint uses bbox only for geometry simplification, and we want full
+  // fidelity here — so omit bbox to get unsimplified routes.
+  itinerariesGeojson(owner: string) {
+    return this.geojson('/api/admin/itineraries/itineraries.geojson', { owner });
   }
   async getItinerary(id: number) {
     return this.unwrap(await this.client.GET('/api/itineraries/{itinerary_id}', { params: { path: { itinerary_id: id } } }));
@@ -88,8 +91,10 @@ export class ApiService {
   }
 
   // ---- Tags ----------------------------------------------------------------
+  // Admin variant: drops the public `visible=True` default so hidden tags
+  // appear in the editor and pickers.
   async listTags(): Promise<Tag[]> {
-    return this.unwrap(await this.client.GET('/api/tags/', { params: { query: {} as any } })) as Tag[];
+    return this.unwrap(await this.client.GET('/api/admin/tags/', { params: { query: {} as any } })) as Tag[];
   }
   async createTag(body: any) {
     return this.unwrap(await this.client.POST('/api/tags/', { body }));
@@ -102,11 +107,13 @@ export class ApiService {
   }
 
   // ---- Experiences ---------------------------------------------------------
+  // Admin variant: workspace-scoped but no listed/active filter. The admin
+  // endpoint returns a plain list (not a paged wrapper).
   async listExperiences(owner: string, ipp = 100): Promise<Experience[]> {
     const r: any = this.unwrap(
-      await this.client.GET('/api/experiences/', { params: { query: { owner, ipp, page: 0 } } })
+      await this.client.GET('/api/admin/experiences/', { params: { query: { owner, ipp, page: 0 } } })
     );
-    return (r?.results ?? []) as Experience[];
+    return (Array.isArray(r) ? r : r?.results) ?? [];
   }
   async createExperience(body: any) {
     return this.unwrap(await this.client.POST('/api/experiences/', { body }));

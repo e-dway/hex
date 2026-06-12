@@ -261,19 +261,14 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  // World bbox — the API requires `bbox`, but we want the workspace's complete
-  // dataset, not a viewport slice.
-  private static readonly WORLD_BBOX = '-180,-85,180,85';
-
   private async reload(why: string) {
     const m = this.map;
     if (!m || !m.isStyleLoaded()) return;
     const seq = ++this.reloadSeq;
     const owner = this.st.owner();
-    const bbox = MapComponent.WORLD_BBOX;
     this.st.loading.set(true);
     try {
-      const [pois, itins] = await Promise.allSettled([this.api.poisGeojson(bbox, owner), this.api.itinerariesGeojson(bbox, owner)]);
+      const [pois, itins] = await Promise.allSettled([this.api.poisGeojson(owner), this.api.itinerariesGeojson(owner)]);
       if (seq !== this.reloadSeq) return;
       const poiData = pois.status === 'fulfilled' ? pois.value : this.last.pois;
       const itinData = itins.status === 'fulfilled' ? itins.value : this.last.itineraries;

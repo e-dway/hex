@@ -518,6 +518,56 @@ export interface paths {
     /** Delete */
     delete: operations["userpoi_delete"];
   };
+  "/api/admin/pois/": {
+    /**
+     * List Pois Admin
+     * @description All POIMeta records for the workspace — no hidden / relevance filtering.
+     */
+    get: operations["pois_admin_router_list_pois_admin"];
+  };
+  "/api/admin/pois/pois.geojson": {
+    /**
+     * Pois Geojson Admin
+     * @description Every POI for the workspace as GeoJSON.
+     *
+     * No relevance threshold. ``bbox`` is OPTIONAL; when provided, results are
+     * spatially filtered (same as the public endpoint). Without it you get the
+     * complete workspace catalog.
+     */
+    get: operations["pois_admin_router_pois_geojson_admin"];
+  };
+  "/api/admin/itineraries/": {
+    /**
+     * List Itineraries Admin
+     * @description All itineraries for the workspace — no visibility / user filter.
+     */
+    get: operations["itineraries_admin_router_list_itineraries_admin"];
+  };
+  "/api/admin/itineraries/itineraries.geojson": {
+    /**
+     * Itineraries Geojson Admin
+     * @description Every itinerary for the workspace as GeoJSON.
+     *
+     * No visibility / user filter. ``bbox`` is OPTIONAL; when provided, it
+     * drives geometry simplification (matching the public endpoint's behaviour)
+     * so the payload is reasonable for the requested viewport.
+     */
+    get: operations["itineraries_admin_router_itineraries_geojson_admin"];
+  };
+  "/api/admin/tags/": {
+    /**
+     * List Tags Admin
+     * @description All tags. Same `filter` JSON shape as the public endpoint.
+     */
+    get: operations["tags_admin_router_list_tags_admin"];
+  };
+  "/api/admin/experiences/": {
+    /**
+     * List Experiences Admin
+     * @description All experiences for the workspace — no listed / active filter.
+     */
+    get: operations["experiences_admin_router_list_experiences_admin"];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -549,7 +599,7 @@ export interface components {
        * Location
        * @default {}
        */
-      location?: string;
+      location?: unknown;
       /** ID */
       id?: number | null;
       /** Poi */
@@ -910,7 +960,7 @@ export interface components {
       /** Family */
       family?: string | null;
       /** Parent */
-      parent_id?: number | null;
+      parent?: number | null;
       /**
        * Visible
        * @default true
@@ -1113,7 +1163,8 @@ export interface components {
       tags: {
           [key: string]: unknown;
         }[];
-      visibility: components["schemas"]["VisibilityChoice"];
+      /** Visibility */
+      visibility: string;
       /** ID */
       id?: number | null;
       /** Owner */
@@ -1205,11 +1256,6 @@ export interface components {
       /** Results */
       results: components["schemas"]["ItineraryOutSchema"][];
     };
-    /**
-     * VisibilityChoice
-     * @enum {string}
-     */
-    VisibilityChoice: "visible" | "hidden" | "private";
     /** ItineraryInSchema */
     ItineraryInSchema: {
       /** Owner */
@@ -4708,6 +4754,135 @@ export interface operations {
           "application/json": {
             [key: string]: unknown;
           };
+        };
+      };
+    };
+  };
+  /**
+   * List Pois Admin
+   * @description All POIMeta records for the workspace — no hidden / relevance filtering.
+   */
+  pois_admin_router_list_pois_admin: {
+    parameters: {
+      query: {
+        owner: string;
+        page?: number;
+        ipp?: number;
+        fltr?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["POISchemaOut"][];
+        };
+      };
+    };
+  };
+  /**
+   * Pois Geojson Admin
+   * @description Every POI for the workspace as GeoJSON.
+   *
+   * No relevance threshold. ``bbox`` is OPTIONAL; when provided, results are
+   * spatially filtered (same as the public endpoint). Without it you get the
+   * complete workspace catalog.
+   */
+  pois_admin_router_pois_geojson_admin: {
+    parameters: {
+      query: {
+        owner: string;
+        bbox?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List Itineraries Admin
+   * @description All itineraries for the workspace — no visibility / user filter.
+   */
+  itineraries_admin_router_list_itineraries_admin: {
+    parameters: {
+      query: {
+        owner: string;
+        page?: number;
+        ipp?: number;
+        fltr?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ItineraryOutSchema"][];
+        };
+      };
+    };
+  };
+  /**
+   * Itineraries Geojson Admin
+   * @description Every itinerary for the workspace as GeoJSON.
+   *
+   * No visibility / user filter. ``bbox`` is OPTIONAL; when provided, it
+   * drives geometry simplification (matching the public endpoint's behaviour)
+   * so the payload is reasonable for the requested viewport.
+   */
+  itineraries_admin_router_itineraries_geojson_admin: {
+    parameters: {
+      query: {
+        owner: string;
+        bbox?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List Tags Admin
+   * @description All tags. Same `filter` JSON shape as the public endpoint.
+   */
+  tags_admin_router_list_tags_admin: {
+    parameters: {
+      query?: {
+        filter?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["TagSchema"][];
+        };
+      };
+    };
+  };
+  /**
+   * List Experiences Admin
+   * @description All experiences for the workspace — no listed / active filter.
+   */
+  experiences_admin_router_list_experiences_admin: {
+    parameters: {
+      query: {
+        owner: string;
+        page?: number;
+        ipp?: number;
+        fltr?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ExperienceSchema"][];
         };
       };
     };
