@@ -1,12 +1,16 @@
 import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { StateService } from '../state/state.service';
 import { ThemeService } from '../state/theme.service';
+import { AuthService } from '../state/auth.service';
+
+const SHORT = (id: string | null) => (id ? `${id.slice(0, 8)}…${id.slice(-4)}` : '—');
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <header class="topbar">
       <div class="brand">
@@ -24,15 +28,12 @@ import { ThemeService } from '../state/theme.service';
       </div>
 
       <div class="owner">
-        <label for="owner">Workspace</label>
-        <div class="owner__field">
-          <input id="owner" list="owners" autocomplete="off" spellcheck="false"
-                 [value]="st.owner()" (change)="onOwner($any($event.target).value)" aria-label="Owner workspace id" />
-          <datalist id="owners">
-            <option *ngFor="let o of st.knownOwners()" [value]="o"></option>
-          </datalist>
-        </div>
-        <button class="iconbtn" title="Reload data in view" aria-label="Reload" (click)="reload()">
+        <label for="ws">Workspace</label>
+        <select id="ws" class="owner__select" [ngModel]="auth.clientId()" (ngModelChange)="switch($event)"
+                [disabled]="auth.clients().length <= 1" aria-label="Active workspace">
+          <option *ngFor="let id of auth.clients()" [value]="id">{{ short(id) }}</option>
+        </select>
+        <button class="iconbtn" title="Reload data" aria-label="Reload" (click)="reload()">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M20 11A8 8 0 1 0 18 16M20 5v6h-6" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
@@ -47,23 +48,41 @@ import { ThemeService } from '../state/theme.service';
         <button class="iconbtn iconbtn--label" title="Toggle theme" aria-label="Toggle color theme" (click)="theme.cycle()">
           <span aria-hidden="true">{{ theme.icon() }}</span><span>{{ theme.label() }}</span>
         </button>
+        <div class="user" *ngIf="auth.user() as u" [title]="u">
+          <span class="user__avatar" aria-hidden="true">{{ initial(u) }}</span>
+          <button class="iconbtn iconbtn--label" title="Sign out" aria-label="Sign out" (click)="logout()">
+            <span aria-hidden="true">↪</span><span>Sign out</span>
+          </button>
+        </div>
       </div>
     </header>
   `,
 })
 export class TopbarComponent {
+  short = SHORT;
+
   status = computed(() => {
     if (this.st.loading()) return { kind: 'busy', text: 'loading' };
     return { kind: 'ok', text: `${this.st.pois().features.length} places · ${this.st.itineraries().features.length} routes` };
   });
 
-  constructor(public st: StateService, public theme: ThemeService) {}
+  constructor(public st: StateService, public theme: ThemeService, public auth: AuthService) {}
 
-  onOwner(value: string) {
+  switch(id: string) {
+    if (!id || id === this.auth.clientId()) return;
     this.st.closeEditor();
-    this.st.setOwner(value);
+    this.auth.switchClient(id);
   }
+
   reload() {
     this.st.bumpRefresh();
+  }
+
+  initial(u: string) {
+    return (u.trim()[0] || '?').toUpperCase();
+  }
+
+  logout() {
+    this.auth.logout();
   }
 }

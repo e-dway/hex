@@ -11,12 +11,12 @@ export interface EditorState {
   seed?: any; // optional initial data (e.g. clicked feature properties, or a dropped point)
 }
 
-const KNOWN = ['806af00f-827f-4e4a-a5c6-93ffa80bd763', 'system'];
-
 @Injectable({ providedIn: 'root' })
 export class StateService {
-  owner = signal(localStorage.getItem('hex.owner') || KNOWN[0]);
-  knownOwners = signal<string[]>(JSON.parse(localStorage.getItem('hex.knownOwners') || 'null') || KNOWN);
+  // The active workspace id. Initialised from the same key the AuthService
+  // writes to so a refreshed session shows the right data before the
+  // auth->state effect has a chance to run.
+  owner = signal(localStorage.getItem('E-DWay:client_id') || '');
 
   tab = signal<Tab>('pois');
   filter = signal('');
@@ -45,14 +45,7 @@ export class StateService {
 
   setOwner(o: string) {
     const t = (o || '').trim();
-    if (!t) return;
-    if (!this.knownOwners().includes(t)) {
-      const k = [t, ...this.knownOwners()].slice(0, 12);
-      this.knownOwners.set(k);
-      localStorage.setItem('hex.knownOwners', JSON.stringify(k));
-    }
-    localStorage.setItem('hex.owner', t);
-    this.owner.set(t);
+    if (t) this.owner.set(t);
   }
 
   closeEditor() {
