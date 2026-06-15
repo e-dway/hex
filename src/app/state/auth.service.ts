@@ -115,7 +115,13 @@ export class AuthService {
       let msg = `${res.status} ${res.statusText}`;
       try {
         const j = JSON.parse(text);
-        msg = j?.detail || j?.message || j?.error || msg;
+        const dialogName: string | undefined = j?.dialog?.name;
+        msg =
+          j?.detail ||
+          j?.message ||
+          j?.error ||
+          (dialogName ? humaniseDialog(dialogName) : null) ||
+          msg;
       } catch {}
       throw new Error(msg);
     }
@@ -132,6 +138,18 @@ export class AuthService {
   private setClients(list: string[]) { this.clients.set(list); localStorage.setItem(K.clients, JSON.stringify(list)); }
   private setRoles(r: any) { this.roles.set(r); localStorage.setItem(K.roles, JSON.stringify(r)); }
   private setClientId(id: string) { this.clientId.set(id); localStorage.setItem(K.clientId, id); }
+}
+
+// The backend reports errors via a "dialog" object — map the names we know
+// to readable messages so the login screen says something useful.
+function humaniseDialog(name: string): string {
+  switch (name) {
+    case 'error_credential': return 'Email or password is incorrect.';
+    case 'error_user_disabled': return 'This account has been disabled.';
+    case 'error_user_not_found': return 'No account found for that email.';
+    case 'error_token_expired': return 'Your session expired — please sign in again.';
+    default: return name.replace(/^error_/, '').replace(/_/g, ' ');
+  }
 }
 
 function readJson<T = any>(key: string): T | null {
