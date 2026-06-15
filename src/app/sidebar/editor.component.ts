@@ -62,6 +62,18 @@ const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', 
               </label>
             </div>
           </div>
+          <div class="field">
+            <label>Experiences <span class="note">· this place is part of {{ expSet.size }} of {{ st.experiences().length }}</span></label>
+            <div class="tagpick" *ngIf="st.experiences().length; else noExp">
+              <label *ngFor="let e of st.experiences()" [title]="e.name || ''">
+                <input type="checkbox" [checked]="expSet.has(asNum(e.id))" (change)="toggleExp(asNum(e.id), $any($event.target).checked)" />{{ e.name || ('Experience ' + e.id) }}
+              </label>
+            </div>
+            <ng-template #noExp>
+              <div class="field-hint">This workspace has no experiences yet.</div>
+            </ng-template>
+            <div class="field-hint" *ngIf="isNew">Save the place first, then come back to attach it to experiences.</div>
+          </div>
           <div class="field--row">
             <label class="check"><input type="checkbox" [(ngModel)]="draft.highlight" /><span>Feature this place</span></label>
             <label class="check"><input type="checkbox" [(ngModel)]="draft.audio_guide" /><span>Audio guide</span></label>
@@ -157,6 +169,14 @@ export class EditorComponent {
   isNew = false;
   saving = false;
   tagSet = new Set<string>();
+  /** Experience ids this place is part of (POI editor only). */
+  expSet = new Set<number>();
+  /** The POI core id we sync experience memberships against. */
+  private poiCoreId: number | null = null;
+
+  asNum(v: any): number {
+    return Number(v);
+  }
 
   constructor(private api: ApiService, public st: StateService, private toast: ToastService) {
     effect(() => {
@@ -220,6 +240,17 @@ export class EditorComponent {
       this.tagSet = new Set<string>(data.tags || []);
       if (data.radius == null) data.radius = 30;
       if (data.relevance == null) data.relevance = 5;
+      // Derive current experience memberships from the workspace's experiences.
+      const coreId = Number(data.id ?? ed.seed?.['id']);
+      this.poiCoreId = Number.isFinite(coreId) ? coreId : null;
+      this.expSet = new Set<number>();
+      if (this.poiCoreId != null) {
+        for (const e of this.st.experiences()) {
+          if (Array.isArray(e.pois) && e.pois.some((p: any) => Number(p) === this.poiCoreId)) {
+            this.expSet.add(Number(e.id));
+          }
+        }
+      }
     } else {
       this.st.editMarker.set(null);
       this.st.createMode.set(false);
@@ -278,6 +309,26 @@ export class EditorComponent {
     this.refreshRaw();
   }
 
+  toggleExp(id: number, on: boolean) {
+    if (on) this.expSet.add(id);
+    else this.expSet.delete(id);
+  }
+
+  /** After a POI save, push any changed experience memberships back via PUTs. */
+  private async syncPoiExperiences(poiCoreId: number) {
+    const targets: Promise<any>[] = [];
+    for (const e of this.st.experiences()) {
+      const expId = Number(e.id);
+      const pois = (Array.isArray(e.pois) ? e.pois : []).map(Number);
+      const was = pois.includes(poiCoreId);
+      const now = this.expSet.has(expId);
+      if (was === now) continue;
+      const nextPois = now ? [...pois, poiCoreId] : pois.filter((p) => p !== poiCoreId);
+      targets.push(this.api.updateExperience(expId, { ...e, pois: nextPois }));
+    }
+    if (targets.length) await Promise.all(targets);
+  }
+
   onRawToggle(open: boolean) {
     if (open) this.refreshRaw();
   }
@@ -308,7 +359,12 @@ export class EditorComponent {
         if (!d.name) throw new Error('Name is required');
         if (Number.isFinite(this.lat) && Number.isFinite(this.lon)) d.location = makePoint(this.lon!, this.lat!);
         if (!d.location?.coordinates) throw new Error('Location is required — set coordinates');
-        ed.isNew ? await this.api.createPoi(d) : await this.api.updatePoi(ed.id!, d);
+        const saved: any = ed.isNew ? await this.api.createPoi(d) : await this.api.updatePoi(ed.id!, d);
+        // Push experience memberships (only for existing POIs; new ones don't
+        // have a stable id until after the create response, but createPoi
+        // returns it so we can sync then too).
+        const coreId = Number(saved?.id ?? ed.id ?? this.poiCoreId);
+        if (Number.isFinite(coreId)) await this.syncPoiExperiences(coreId);
       } else if (ed.kind === 'itinerary') {
         if (!d.name) throw new Error('Name is required');
         // The API writes `pois` as an array of integer ids (read returns objects).
