@@ -9,11 +9,6 @@ import { DurationParts, EMPTY_PARTS, fromIso, toIso } from '../shared/duration';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="duration">
-      <span class="duration__group" title="Days">
-        <input type="number" inputmode="numeric" min="0" placeholder="0"
-               [(ngModel)]="parts.d" (ngModelChange)="emit()" aria-label="Days" />
-        <span class="duration__suffix">d</span>
-      </span>
       <span class="duration__group" title="Hours">
         <input type="number" inputmode="numeric" min="0" placeholder="0"
                [(ngModel)]="parts.h" (ngModelChange)="emit()" aria-label="Hours" />
