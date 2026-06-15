@@ -441,6 +441,25 @@ details.adv .field-hint { margin-bottom: 8px; }
   background: var(--magenta); color: var(--on-accent); font-weight: 700; font-size: var(--t-xs);
   box-shadow: 0 0 0 2px var(--magenta-soft); }
 
+/* ============================ DURATION FIELD ============================ */
+.duration { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.duration__group { display: inline-flex; align-items: center; gap: 4px; }
+.duration__group input {
+  width: 54px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--r-md); padding: 7px 8px; font-size: var(--t-sm); text-align: right;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.duration__group input::-webkit-outer-spin-button,
+.duration__group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.duration__group input:focus { outline: none; border-color: var(--magenta); box-shadow: var(--ring); }
+.duration__suffix { color: var(--text-muted); font-size: var(--t-xs); font-weight: 600; }
+.duration__iso {
+  margin-left: auto; font-family: var(--font-mono); font-size: var(--t-2xs);
+  color: var(--text-muted); padding: 3px 8px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+}
+
 /* ============================ ICON PICKER =============================== */
 .icon-field { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: var(--r-md);
   background: var(--surface-2); border: 1px solid var(--border); transition: border-color var(--dur), background var(--dur); }

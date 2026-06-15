@@ -9,6 +9,7 @@ import { parseLocalized, serializeLocalized } from '../shared/localized';
 import { GalleryComponent } from './gallery.component';
 import { ItineraryStopsComponent } from './itinerary-stops.component';
 import { IconPickerComponent } from './icon-picker.component';
+import { DurationFieldComponent } from './duration-field.component';
 
 const VISIBILITY = ['visible', 'hidden', 'private'];
 const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', tag: 'tag', experience: 'experience' };
@@ -16,7 +17,7 @@ const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', 
 @Component({
   selector: 'app-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, GalleryComponent, ItineraryStopsComponent, IconPickerComponent],
+  imports: [CommonModule, FormsModule, GalleryComponent, ItineraryStopsComponent, IconPickerComponent, DurationFieldComponent],
   template: `
     <section class="detail" *ngIf="st.editor() as ed">
       <div class="detail__head">
@@ -50,6 +51,7 @@ const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', 
             <div class="field"><label>Radius (m)</label><input type="number" [(ngModel)]="draft.radius" /></div>
             <div class="field"><label>Relevance</label><input type="number" [(ngModel)]="draft.relevance" /></div>
           </div>
+          <div class="field"><label>Duration <span class="note">· ISO 8601</span></label><app-duration-field [value]="draft.duration" (valueChange)="onDuration('duration', $event)"></app-duration-field></div>
           <ng-container *ngTemplateOutlet="descFields"></ng-container>
           <app-gallery [items]="draft.gallery" (itemsChange)="onGallery($event)"></app-gallery>
           <app-icon-picker [value]="draft.icon" (valueChange)="onIcon($event)"></app-icon-picker>
@@ -93,9 +95,10 @@ const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', 
           <div class="field"><label>Abstract</label><textarea rows="2" [(ngModel)]="draft.description_abstract"></textarea></div>
           <ng-container *ngTemplateOutlet="descFields"></ng-container>
           <app-gallery [items]="draft.gallery" (itemsChange)="onGallery($event)"></app-gallery>
+          <div class="field"><label>Length (km)</label><input type="number" [(ngModel)]="draft.length" /></div>
           <div class="field--row">
-            <div class="field"><label>Length (km)</label><input type="number" [(ngModel)]="draft.length" /></div>
-            <div class="field"><label>Total duration</label><input type="text" [(ngModel)]="draft.total_duration" /></div>
+            <div class="field"><label>Duration <span class="note">· ISO 8601</span></label><app-duration-field [value]="draft.duration" (valueChange)="onDuration('duration', $event)"></app-duration-field></div>
+            <div class="field"><label>Total duration <span class="note">· ISO 8601</span></label><app-duration-field [value]="draft.total_duration" (valueChange)="onDuration('total_duration', $event)"></app-duration-field></div>
           </div>
           <div class="field--row">
             <label class="check"><input type="checkbox" [(ngModel)]="draft.directed" /><span>Directed</span></label>
@@ -128,7 +131,7 @@ const EYEBROW: Record<EntityKind, string> = { poi: 'place', itinerary: 'route', 
           <app-gallery [items]="draft.gallery" (itemsChange)="onGallery($event)"></app-gallery>
           <div class="field--row">
             <div class="field"><label>Price</label><input type="number" [(ngModel)]="draft.price" /></div>
-            <div class="field"><label>Duration</label><input type="text" [(ngModel)]="draft.duration" /></div>
+            <div class="field"><label>Duration <span class="note">· ISO 8601</span></label><app-duration-field [value]="draft.duration" (valueChange)="onDuration('duration', $event)"></app-duration-field></div>
           </div>
           <div class="field"><label>Reference email</label><input type="text" [(ngModel)]="draft.reference_email" /></div>
           <div class="field--row">
@@ -299,6 +302,12 @@ export class EditorComponent {
 
   onIcon(url: string) {
     this.draft.icon = url;
+    this.refreshRaw();
+  }
+
+  onDuration(field: 'duration' | 'total_duration', iso: string | null) {
+    if (iso == null) delete this.draft[field];
+    else this.draft[field] = iso;
     this.refreshRaw();
   }
 
