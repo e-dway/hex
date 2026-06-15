@@ -26,7 +26,8 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "allowedCommonJsDependencies": [
-              "maplibre-gl"
+              "maplibre-gl",
+              "iso8601-duration"
             ],
             "assets": [
               {
