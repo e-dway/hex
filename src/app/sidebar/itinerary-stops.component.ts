@@ -66,7 +66,9 @@ export class ItineraryStopsComponent {
   constructor(private api: ApiService, private st: StateService, private toast: ToastService) {}
 
   private nameOf(id: number): string {
-    const f = this.st.pois().features.find((x) => String(x.properties['id']) === String(id));
+    // Match on the feature's root id — that's the POI core id (what
+    // PoiSequence.poi_id expects). `properties.id` is the POIMeta id.
+    const f = this.st.pois().features.find((x) => Number(x.id) === Number(id));
     return f ? f.properties['name'] || `Place ${id}` : `Place ${id}`;
   }
   private normalize(v: any): Stop[] {
@@ -85,8 +87,8 @@ export class ItineraryStopsComponent {
     const have = new Set(this.list.map((s) => String(s.id)));
     return this.st
       .pois()
-      .features.map((f) => ({ id: +f.properties['id'], name: f.properties['name'] || `Place ${f.properties['id']}` }))
-      .filter((p) => !have.has(String(p.id)) && (!q || p.name.toLowerCase().includes(q)))
+      .features.map((f) => ({ id: Number(f.id), name: f.properties['name'] || `Place ${f.id}` }))
+      .filter((p) => Number.isFinite(p.id) && !have.has(String(p.id)) && (!q || p.name.toLowerCase().includes(q)))
       .slice(0, 8);
   }
 

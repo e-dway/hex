@@ -42,7 +42,7 @@ const TABS: { id: Tab; label: string }[] = [
               <div *ngFor="let f of pois()" class="row" [class.is-selected]="isSel('poi', f)" (click)="openPoi(f)">
                 <div class="row__icon"><img *ngIf="thumb(f) as t; else pin" [src]="t" alt="" (error)="hideImg($event)" /><ng-template #pin>📍</ng-template></div>
                 <div class="row__body">
-                  <div class="row__title">{{ f.properties['name'] || 'Place ' + f.properties['id'] }}</div>
+                  <div class="row__title">{{ f.properties['name'] || 'Place ' + f.id }}</div>
                   <div class="row__sub">{{ coord(f) }}</div>
                 </div>
                 <span *ngIf="f.properties['highlight']" class="badge badge--star">★</span>
@@ -184,7 +184,9 @@ export class SidebarComponent implements AfterViewInit {
   }
 
   openPoi(f: Feature) {
-    const id = f.properties['id'];
+    // feature.id is the POI core id (`p.poi.id` in the backend). `properties.id`
+    // is the POIMeta id — using it would mismatch FKs (e.g. PoiSequence.poi_id).
+    const id = Number(f.id ?? f.properties['id']);
     this.st.selection.set({ kind: 'poi', id });
     this.st.editor.set({ kind: 'poi', id, isNew: false, seed: f.properties });
   }
@@ -204,7 +206,11 @@ export class SidebarComponent implements AfterViewInit {
 
   isSel(kind: 'poi' | 'itinerary', f: Feature) {
     const s = this.st.selection();
-    return !!s && s.kind === kind && String(s.id) === String(f.properties['id']);
+    if (!s || s.kind !== kind) return false;
+    // POI selection is keyed on the POI core id (feature root); itineraries
+    // still use properties.id (no Meta indirection there).
+    const fid = kind === 'poi' ? (f.id ?? f.properties['id']) : f.properties['id'];
+    return String(s.id) === String(fid);
   }
 
   thumb = (f: Feature) => poiThumb(f.properties);

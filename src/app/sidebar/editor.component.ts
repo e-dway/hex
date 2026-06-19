@@ -244,7 +244,10 @@ export class EditorComponent {
       if (data.radius == null) data.radius = 30;
       if (data.relevance == null) data.relevance = 5;
       // Derive current experience memberships from the workspace's experiences.
-      const coreId = Number(data.id ?? ed.seed?.['id']);
+      // `data.id` (from /api/pois/{id}) and `ed.id` (set by openPoi from the
+      // feature root) are both POI core ids — seed.id would be the POIMeta id,
+      // which is the wrong space.
+      const coreId = Number(data.id ?? ed.id);
       this.poiCoreId = Number.isFinite(coreId) ? coreId : null;
       this.expSet = new Set<number>();
       if (this.poiCoreId != null) {

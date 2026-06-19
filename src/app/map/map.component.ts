@@ -126,7 +126,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const c = PALETTE[this.theme];
     for (const id of ['itin-casing', 'itin-line', 'poi-halo', 'poi-dot', 'poi-label']) if (m.getLayer(id)) m.removeLayer(id);
     if (!m.getSource('itineraries')) m.addSource('itineraries', { type: 'geojson', data: this.last.itineraries as any, promoteId: 'id' });
-    if (!m.getSource('pois')) m.addSource('pois', { type: 'geojson', data: this.last.pois as any, promoteId: 'id' });
+    // No promoteId on the POI source — `feature.id` in the geojson is the POI
+    // core id (what PoiSequence.poi_id, /api/pois/{id}, experience.pois etc.
+    // all expect). `properties.id` would be the POIMeta id, which would mismatch.
+    if (!m.getSource('pois')) m.addSource('pois', { type: 'geojson', data: this.last.pois as any });
 
     m.addLayer({
       id: 'itin-casing', type: 'line', source: 'itineraries',
@@ -243,9 +246,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     m.on('click', 'poi-dot', (e: any) => {
       e.preventDefault();
-      const id = e.features[0].properties.id;
+      // Feature root id is the POI core id; properties.id is the POIMeta id.
+      const f = e.features[0];
+      const id = Number(f.id ?? f.properties.id);
       this.st.selection.set({ kind: 'poi', id });
-      this.st.editor.set({ kind: 'poi', id, isNew: false, seed: e.features[0].properties });
+      this.st.editor.set({ kind: 'poi', id, isNew: false, seed: f.properties });
     });
     m.on('click', 'itin-line', (e: any) => {
       if (e.defaultPrevented) return;
